@@ -4,7 +4,10 @@ import com.phone.model.BusinessContact;
 import com.phone.model.Contact;
 import com.phone.model.PersonalContact;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
+import java.util.stream.Collectors;
+
 public class Phonebook implements AutoCloseable {
     private  ArrayList<Contact> contacts = new ArrayList<>();
     Scanner scanner = new Scanner(System.in);
@@ -12,9 +15,10 @@ public class Phonebook implements AutoCloseable {
         System.out.println("**** Menu **** ");
         System.out.println("---- 1. Add new contact ");
         System.out.println("---- 2. Display all contact ");
-        System.out.println("---- 3. Search ");
-        System.out.println("---- 4. Edit contact ");
-        System.out.println("---- 5. Delete contact ");
+        System.out.println("---- 3. Search and print by name");
+        System.out.println("---- 4. Search and print by family");
+        System.out.println("---- 5. Search and edit by name ");
+        System.out.println("---- 6. Delete contact ");
         System.out.println("---- 0. Exit \n");
     }
     private void displayAllContact() {
@@ -27,7 +31,7 @@ public class Phonebook implements AutoCloseable {
             }
         }
     }
-    private   void addContact(Scanner scanner){
+    private   void addContact(){
 
         System.out.println("**** Contact Type **** ");
         System.out.println(" 1. PERSONAL ");
@@ -36,29 +40,29 @@ public class Phonebook implements AutoCloseable {
         int choice = scanner.nextInt();
         scanner.nextLine();
         if(choice==1){
-            System.out.println("Enter name:");
-            String name = scanner.nextLine();
-            System.out.println("Enter family:");
-            String family = scanner.nextLine();
-            System.out.println("Enter number:");
-            String number = scanner.nextLine();
+            String name = getUserInput("Enter name:");
+            String family = getUserInput("Enter family:");
+            String number = getUserInput("Enter number:");
             PersonalContact personalContact=new PersonalContact(name,number);
             personalContact.setFamily(family);
             contacts.add(personalContact);
             System.out.println("PersonalContact added successfully!");
         } else {
-            System.out.println("Enter name:");
-            String name = scanner.nextLine();
-            System.out.println("Enter number:");
-            String number = scanner.nextLine();
-            System.out.println("Enter Fax number:");
-            String fax = scanner.nextLine();
+            String name = getUserInput("Enter name:");
+            String number = getUserInput("Enter number:");
+            String fax = getUserInput("Enter Fax number:");
             BusinessContact businessContact= new BusinessContact(name,number);
             businessContact.setFax(fax);
             contacts.add(businessContact);
             System.out.println("BusinessContact added successfully!");
         }
     }
+
+    private String getUserInput(String message) {
+        System.out.println(message);
+        return scanner.nextLine();
+    }
+
     public void run(){
         int input;
         do {
@@ -68,19 +72,22 @@ public class Phonebook implements AutoCloseable {
             scanner.nextLine();
             switch (input) {
                 case 1:
-                    addContact(scanner);
+                    addContact();
                     break;
                 case 2:
                     displayAllContact();
                     break;
                 case 3:
-                    System.out.println("search");
+                   searchByName();
                     break;
                 case 4:
-                    System.out.println("edit");
+                    searchByFamily();
                     break;
                 case 5:
-                    System.out.println("delete");
+                    searchAndEditByName();
+                    break;
+                case 6:
+                    searchAndDeleteContactsByName();
                     break;
                 case 0:
                     System.out.println(" Exiting...! ");
@@ -91,6 +98,74 @@ public class Phonebook implements AutoCloseable {
         } while (input!= 0);
         scanner.close();
     }
+
+    private void searchAndDeleteContactsByName() {
+        String name= getUserInput("Enter the name:");
+        contacts.removeIf(contact ->contact.getName().equalsIgnoreCase(name) );
+ //       List<Contact> contactsToDelete =new ArrayList<>();
+ //      contactsToDelete = contacts.stream()
+//               .filter(contact -> contact.getName().equalsIgnoreCase(name))
+//                .collect(Collectors.toList());
+
+/*        for (Contact contact : contacts){
+            if(contact.getName().equalsIgnoreCase(name)){
+                contactsToDelete.add(contact);
+            }
+        }*/
+
+        //       if(!contactsToDelete.isEmpty()){
+        //        contacts.removeAll(contactsToDelete);
+ //       }
+    }
+    private void searchAndEditByName() {
+        String name= getUserInput("Enter the name:");
+        for(Contact contact: contacts){
+            if(contact.getName().equalsIgnoreCase(name)){
+                String number= getUserInput("Enter new number:");
+                contact.setNumber(number);
+                if(contact instanceof PersonalContact personalContact){
+                    String family= getUserInput("Enter new family:");
+                    personalContact.setFamily(family);
+                }else if(contact instanceof BusinessContact businessContact){
+                    String fax= getUserInput("Enter new fax:");
+                    businessContact.setFax(fax);
+                }
+            }
+        }
+    }
+
+    private void searchByFamily() {
+        String family= getUserInput("Enter the family:");
+        contacts.stream()
+                .filter(contact -> contact instanceof PersonalContact)
+                .map(contact -> ((PersonalContact) contact))
+                .filter(personalContact -> personalContact.getFamily().equalsIgnoreCase(family))
+                .forEach(System.out::println);
+
+//        for (Contact contact : contacts) {
+//            if (contact instanceof PersonalContact personalContact){
+//                if(personalContact.getFamily().equalsIgnoreCase(family)){
+//                    System.out.println(contact);
+//                }
+//            }
+//        }
+
+    }
+
+    private void searchByName() {
+        String name= getUserInput("Enter the name:");
+        contacts.stream()
+                .filter(contact -> contact.getName().equalsIgnoreCase(name))
+                .forEach(System.out::println);
+
+//        for (Contact contact : contacts) {
+//            if(contact.getName().equalsIgnoreCase(name)){
+//                System.out.println(contact);
+//            }
+//
+//        }
+    }
+
     @Override
     public void close()  {
         scanner.close();
